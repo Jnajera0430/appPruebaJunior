@@ -1,13 +1,20 @@
 import { TextField, Stack, Button } from "@mui/material";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { setUser } from "../app/features/userSlice";
+import { userLogin } from "../fetch/peticiones";
+import { useNavigate } from "react-router-dom";
 
 interface UserLogin {
-  username: string;
+  user: string;
   password: string;
 }
 
 export default function Login() {
   const [dataUser, setDataUser] = useState<UserLogin | any>(undefined);
+  const navegate = useNavigate();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.stateUser);
 
   const handleOnChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setDataUser({
@@ -15,20 +22,34 @@ export default function Login() {
       [e.target.name]: e.target.value,
     });
   };
-  const handleOnSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleOnSubmit = async (e: FormEvent<HTMLFormElement>): Promise<any> => {
     e.preventDefault();
-     
-    e.currentTarget.reset();
+    try {
+
+      const verifyUser = await userLogin("POST", dataUser);
+      console.log(verifyUser);
+      dispatch(setUser(verifyUser));
+      window.location.reload();
+    } catch (error) {
+      console.log(error);
+      
+    }
   };
+
+  useEffect(() => {
+    if (user) {
+      navegate("home");
+    }
+  }, [user])
   return (
     <form onSubmit={handleOnSubmit}>
       <Stack spacing={3}>
-        <h1>Signin</h1>
+        <h1 style={{ color: '#918d8dde' }}>Signin</h1>
         <div>
           <TextField
             onChange={handleOnChange}
             id="outlined-basic"
-            name="username"
+            name="user"
             label="Username"
             variant="outlined"
           />
@@ -44,7 +65,7 @@ export default function Login() {
           />
         </div>
         <div>
-          <Button type="submit">Login</Button>
+          <Button type="submit" sx={{ background: '#918d8dde' }}>Login</Button>
         </div>
       </Stack>
     </form>
